@@ -14,34 +14,8 @@ for(var i = 0; i < cmds.length; i++) {
 commands["-h"] = "sandcli/help";
 commands["--help"] = "sandcli/help";
 commands["h"] = "sandcli/help";
-/*
-  {
-    desc : "Require a sandjs module",
-    grainName : 
-  },
-  
-  "server" : {
-    desc : "Start a sandjs dependencies server",
-    grainName : "sandcli/server"
-  },
-  
-  "path" : {
-    desc : "Manage path of the sandjs dependencies server",
-    grainName : "sandcli/path"
-  },
-  
-  "-h" : function(commandName){
-)
-  },
-  
-  "--help" : "-h",
-  
-  "--help" : "-h"
-  
-  "s" : "server"
-};
-*/
-var args = [], moduleName;
+
+args = [], moduleName;
 // print process.argv
 process.argv.forEach(function (val, index, array) {
   if(index === 2) {
