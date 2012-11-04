@@ -1,0 +1,64 @@
+#!/usr/bin/env node
+
+require("sandjs");
+    var scriptname = "sand";
+    
+var cmds = ["require", "server", "path", "merge", "min", "test", "help"],
+    commands = {};
+
+for(var i = 0; i < cmds.length; i++) {
+  require("./"+cmds[i]);
+  commands[cmds[i]] = "sandcli/"+cmds[i];
+}
+
+commands["-h"] = "sandcli/help";
+commands["--help"] = "sandcli/help";
+commands["h"] = "sandcli/help";
+/*
+  {
+    desc : "Require a sandjs module",
+    grainName : 
+  },
+  
+  "server" : {
+    desc : "Start a sandjs dependencies server",
+    grainName : "sandcli/server"
+  },
+  
+  "path" : {
+    desc : "Manage path of the sandjs dependencies server",
+    grainName : "sandcli/path"
+  },
+  
+  "-h" : function(commandName){
+)
+  },
+  
+  "--help" : "-h",
+  
+  "--help" : "-h"
+  
+  "s" : "server"
+};
+*/
+var args = [], moduleName;
+// print process.argv
+process.argv.forEach(function (val, index, array) {
+  if(index === 2) {
+    if(commands[val]) {
+      moduleName = commands[val];
+    } else {
+      args.push(val);
+    }
+  } else if (index > 2) {
+    args.push(val);
+  }
+});
+
+if(!moduleName) {
+ moduleName = "sandcli/require";
+}
+sand.require(moduleName+"->cmd", function(r){
+  r.cmd.fn.call(this,args);
+});
+
