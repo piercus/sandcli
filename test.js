@@ -22,14 +22,14 @@ sand.define("sandcli/test", ["sandcli/require", "sand", "sandcli/server"], funct
       var moduleNames = serverRequire.serverDefineMany(testFiles);
       
       r.sand.require.apply(this, moduleNames.concat([function(r){
-        if(jasmine) {
+        if(typeof(jasmine) !== "undefined" && jasmine) {
           jasmine.getEnv().execute(); 
         } else {
           for(var i in r) if(r.hasOwnProperty(i) && i !== "tests") {
-            r[i].run();
+            r[i].run && r[i].run();
           }
           for(var i in r.tests) if(r.tests.hasOwnProperty(i)) {
-            r.tests[i].run({reporter:spec});
+            r.tests[i].run && r.tests[i].run({reporter:spec});
           }
         } 
 

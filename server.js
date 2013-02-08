@@ -35,8 +35,13 @@ sand.define("sandcli/server", ["sandcli/merge", "sandcli/min", "sandcli/require"
          }
 
       });
-      console.log("=> sand server start at http://localhost:"+port);
       
+      app.get("/html", function(req, res) {
+        var mods = getModules(req);      
+         res.send("<html><head></head><body><script src='/require?query="+req.query.query+"' type='text/javascript'></script><script>sand.require("+mods.map(function(e){return "'"+e+"'";}).join(",")+");</script></body></html>");
+      }); 
+      
+           
       app.get("*", function(req, res) {      
          res.setHeader('Content-Type',"text/javascript");
          console.log(req.route.params[0].substr(1));  res.send(fs.readFileSync(r.require.findFile(req.route.params[0].substr(1), { env : "browser"})));
@@ -59,7 +64,8 @@ sand.define("sandcli/server", ["sandcli/merge", "sandcli/min", "sandcli/require"
       
       var port = 8899;
       app.get("/test", function(req, res){
-        var mods = getModules(req);
+        var mods = getModules(req); 
+        
         res.send("<html><head></head><link rel='stylesheet' href='http://pivotal.github.com/jasmine/lib/jasmine.css'></style>"+scriptDeps+"<script>sand.require("+mods.map(function(e){return "'"+e+"'";}).join(",")+", function(r){\nwindow.onload=function(){\nvar htmlReporter = new jasmine.HtmlReporter();\njasmine.getEnv().addReporter(htmlReporter);\n\n if(jasmine) {\n  jasmine.getEnv().execute(); \n} else {\n for(var i in r) if(r.hasOwnProperty(i) && i !== 'tests') {\n r[i].run();\n } for(var i in r.tests) if(r.tests.hasOwnProperty(i)) {\n r.tests[i].run();\n } }\n};\n }); </script> <body></body></html>");
       });
       console.log("=> sand server start at http://localhost:"+port+"/test");
