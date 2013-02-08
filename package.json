@@ -14,7 +14,8 @@
     "sandjs" : "git://github.com/piercus/sandjs.git",
     "uglify-js" : "*",
     "browserify" : "1.16.3",
-    "vows" : "*"
+    "vows" : "*",
+    "express" : "*"
   },
   "bin": {
     "sand": "sand"
