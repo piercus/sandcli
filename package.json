@@ -5,7 +5,7 @@
   },
   "name": "sandcli",
   "description": "Command line interface for sandjs, dependencies server and package requirement in node",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "homepage": "http://github.com/piercus/sandcli",
   "repository": {
     "url": "http://github.com/piercus/sandcli"
@@ -13,7 +13,8 @@
   "dependencies": {
     "sandjs" : "git://github.com/piercus/sandjs.git",
     "uglify-js" : "*",
-    "browserify" : "1.16.3"
+    "browserify" : "1.16.3",
+    "vows" : "*"
   },
   "bin": {
     "sand": "sand"
