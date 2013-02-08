@@ -1,22 +1,34 @@
 {
-  "author": "Pierre Colle <piercus@gmail.com>",
+  "author": {
+    "name": "Pierre Colle",
+    "email": "piercus@gmail.com"
+  },
   "name": "sandcli",
   "description": "Command line interface for sandjs, dependencies server and package requirement in node",
-  "version": "0.0.0",
+  "version": "0.0.3",
   "homepage": "http://github.com/piercus/sandcli",
   "repository": {
     "url": "http://github.com/piercus/sandcli"
   },
   "dependencies": {
-    "sandjs" : "git://github.com/piercus/sandjs.git",
-    "uglify-js" : "*"
+    "sandjs": "git://github.com/piercus/sandjs.git",
+    "uglify-js": "*"
   },
-  "bin" : {
-    "sand" : "sand"
+  "bin": {
+    "sand": "sand"
   },
   "devDependencies": {},
   "optionalDependencies": {},
   "engines": {
     "node": "0.8"
-  }
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "readme": "# sandcli\nsandcli provides a command-line interface to sandjs modules\n\n## install\n\n    $npm install sandcli\n\n## help\n\n    $./sand help\n\n",
+  "_id": "sandcli@0.0.3",
+  "dist": {
+    "shasum": "2970dd0bd3281395760ee2e82e85389d00e73878"
+  },
+  "_from": "sandcli"
 }

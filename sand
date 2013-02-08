@@ -3,7 +3,7 @@
 require("sandjs");
     var scriptname = "sand";
     
-var cmds = ["require", "server", "path", "merge", "min", "test", "help"],
+var cmds = ["require", "server", "path", "merge", "min", "test", "help", "server"],
     commands = {};
 
 for(var i = 0; i < cmds.length; i++) {
@@ -15,7 +15,7 @@ commands["-h"] = "sandcli/help";
 commands["--help"] = "sandcli/help";
 commands["h"] = "sandcli/help";
 
-args = [], moduleName;
+var args = [], moduleName;
 // print process.argv
 process.argv.forEach(function (val, index, array) {
   if(index === 2) {
@@ -29,8 +29,10 @@ process.argv.forEach(function (val, index, array) {
   }
 });
 
-if(!moduleName) {
- moduleName = "sandcli/require";
+if(!moduleName && args.length > 0) {
+  moduleName = "sandcli/require";
+} else if (!moduleName){
+  moduleName = "sandcli/help";
 }
 sand.require(moduleName+"->cmd", function(r){
   r.cmd.fn.call(this,args);

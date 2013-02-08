@@ -12,8 +12,12 @@ sand.define("sandcli/help", [], function(r){
             "  sand <command> <options>",
             "",
             "The most commonly used sand commands are:",
-            "  require   Require and execute a sandjs module (default command)",
-            "  path      Manage path of the sandjs dependencies server ",
+            "  require    Require and execute a sandjs module (default command)",
+            "  path       Manage path of the sandjs dependencies server ", 
+            "  server     Start and sand server",
+            "  test       Run tests in ./tests (with vowsjs)",
+            "  help <cmd> Help on a specific command",
+            
             ""].join("\n"));
       
       } else if (args[0]) {
