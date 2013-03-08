@@ -5,7 +5,7 @@
   },
   "name": "sandcli",
   "description": "Command line interface for sandjs, dependencies server and package requirement in node",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "homepage": "http://github.com/piercus/sandcli",
   "repository": {
     "url": "http://github.com/piercus/sandcli"

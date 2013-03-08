@@ -7,6 +7,7 @@ sand.define("sandcli/require", ["sandcli/path", "sandcli/exists"], function(r){
       modName,filename,
       exists = fs.existsSync,
       realpath = fs.realpathSync,
+      wrappers = [],
       paths = r.path.getPaths(),
       files = {},
       requireStatus = {
@@ -28,48 +29,88 @@ sand.define("sandcli/require", ["sandcli/path", "sandcli/exists"], function(r){
         }
       },
       findFilename = function(n) {
+        
         if(exists(n)){
           return realpath(n);
-        }        
+        }          
+        
         var p;
+        // search in paths define with sand path
         for(var i = 0; i < paths.length; i++){
            p = paths[i]+n;
            if(exists(p)){
              return realpath(p);
            }
-        }     
-        // find module and search in module/lib/module
+        }   
+          
+        // find based module 
         var pack = n.split("/")[0],p2;
         if(p2 = findPath(pack)){ 
+           // search in module/lib/module 
            p = p2+"/lib/"+n;
            if(exists(p)){
              return p;
            }
-        }  
+           
+        }    
+        //console.log("[ERROR] Cannot find ",n);
       },
       
       findFile = function(name, options){
+        var f;
+        //console.log("findFile", name);
         if(files[name] && files[name].filename){
           return files[name].filename;
         }
         var env = (options && options.env) || "node", n; 
         
         n = (name.slice(name.length-env.length) !== env) ? name+"."+env+".js" : name;
-        var f = findFilename(n);
+        f = findFilename(n);
         //console.log(n,f);
         
         if(f) return f;        
         n = (name.slice(name.length-3) !== ".js") ? name+".js" : name;
-        var f = findFilename(n);
-        if(f) return f;
+        f = findFilename(n);
+        if(f) return f;   
+        
+        var pack = name.split("/")[0];
+        if(p2 = findPath(pack)){
+          // search in module/packages.json to see if there is a '_sand' key
+          var packFile = p2+"/package.json", modules, _sand, wrapper;
+          if(exists(packFile)){                                     
+             _sand = JSON.parse(fs.readFileSync(packFile))["_sand"];            
+             if(typeof(_sand) === "object"){
+               modules = _sand["modules"];
+               wrapper = _sand.wrapper;
+               if(wrapper = findFile(wrapper)){
+                 if(!files[wrapper]){
+                   require(wrapper); 
+                   files[wrapper] = {
+                     requires : [],
+                     wrapper : true
+                   };
+                 }
+               }
+               if(_sand["modules"][name]){
+                 return findFile(_sand["modules"][name]);
+               }
+             }
+           }
+           //console.log("Cannot find module named ", name, packFile, exists(packFile), _sand, _sand["modules"][name], findFilename(_sand["modules"][name]+".js"));
+           
+        } else {
+          //console.log("Cannot find any package named ", pack);
+        } 
         
 
         
       },
-      findPath = function(n){
+      findPath = function(n){ 
+        
         if(exists(n)){
           return realpath(n);
-        }
+        }   
+        
         var p;
         for(var i = 0; i < paths.length; i++){
            p = paths[i]+n; 
@@ -191,10 +232,9 @@ sand.define("sandcli/require", ["sandcli/path", "sandcli/exists"], function(r){
            }
          }
       },
-      
       // serverDefine is a way to define 
       serverDefine = function(n,r){
-        //console.log("[DBG]",n);
+        //console.log("[DBG] server Define",n);
         files[n] || (files[n] = {});
         files[n].requires = [];
         if(typeof(r) === "object" && r.length){
@@ -205,7 +245,9 @@ sand.define("sandcli/require", ["sandcli/path", "sandcli/exists"], function(r){
           files[n].requires.push(r.split("->")[0]);
         }
         sand.lastDefine = n.toString();
-        sand.basicDefine.apply(this,arguments);
+                
+        sand.basicDefine.apply(this,arguments);    
+        
       },
       
       defineWithDependencies = function(f, options) {
@@ -244,7 +286,7 @@ sand.define("sandcli/require", ["sandcli/path", "sandcli/exists"], function(r){
     desc : "Launch sandjs files",
     fn : function(args, options) {
       var modules = serverDefineMany(args, options);
-      sand.require.apply(this,modules);
+      sand.require.apply(this, modules);
     },
     serverDefine : defineWithDependencies,
     serverDefineMany : serverDefineMany,
