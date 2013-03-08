@@ -41,23 +41,12 @@ sand.define("sandcli/require", ["sandcli/path", "sandcli/exists"], function(r){
            if(exists(p)){
              return realpath(p);
            }
-        }   
-          
-        // find based module 
-        var pack = n.split("/")[0],p2;
-        if(p2 = findPath(pack)){ 
-           // search in module/lib/module 
-           p = p2+"/lib/"+n;
-           if(exists(p)){
-             return p;
-           }
-           
-        }    
-        //console.log("[ERROR] Cannot find ",n);
+        }             
+
       },
       
-      findFile = function(name, options){
-        var f;
+      findFile = function(name, opts){
+        var f, options = opts || {};
         //console.log("findFile", name);
         if(files[name] && files[name].filename){
           return files[name].filename;
@@ -73,10 +62,19 @@ sand.define("sandcli/require", ["sandcli/path", "sandcli/exists"], function(r){
         f = findFilename(n);
         if(f) return f;   
         
-        var pack = name.split("/")[0];
+        f = findFilenameInPackage(name, name.split("/")[0]);
+        if(f) return f;
+        
+        options.requiringModule && (f = findFilenameInPackage(name, options.requiringModule.split("/")[0]));
+        if(f) return f;
+
+      },
+      findFilenameInPackage = function(name, pack){
+        var p2, f;
         if(p2 = findPath(pack)){
-          // search in module/packages.json to see if there is a '_sand' key
+          // 1. search in module/packages.json to see if there is a '_sand' key
           var packFile = p2+"/package.json", modules, _sand, wrapper;
+          
           if(exists(packFile)){                                     
              _sand = JSON.parse(fs.readFileSync(packFile))["_sand"];            
              if(typeof(_sand) === "object"){
@@ -92,18 +90,25 @@ sand.define("sandcli/require", ["sandcli/path", "sandcli/exists"], function(r){
                  }
                }
                if(_sand["modules"][name]){
-                 return findFile(_sand["modules"][name]);
+                 f = findFile(_sand["modules"][name]);
+                 if(f) return f;
                }
              }
            }
            //console.log("Cannot find module named ", name, packFile, exists(packFile), _sand, _sand["modules"][name], findFilename(_sand["modules"][name]+".js"));
            
-        } else {
-          //console.log("Cannot find any package named ", pack);
-        } 
-        
+           
+          // 2. search in module/lib for a file
+          // find based module 
+          p = p2+"/lib/"+name;
+          f = findFile(p);
+          if(f){
+            return f;
+          }   
 
-        
+        } else {
+          // the package doesn't exist
+        } 
       },
       findPath = function(n){ 
         
@@ -120,16 +125,17 @@ sand.define("sandcli/require", ["sandcli/path", "sandcli/exists"], function(r){
            }
         }
       },
-      addFile = function(file, requiringModule, options){
+      addFile = function(file, options){
 
-        var env = (options && options.env) || "node";
+        var env = (options && options.env) || "node",
+            requiringModule = options.requiringModule;
         if(file[0] === ".") {
           if(file[1] === "/"){
             var path = requiringModule.split("/");
-            return addFile(path.slice(0,path.length-1).concat([file.substr(2)]).join("/"), requiringModule, options);
+            return addFile(path.slice(0,path.length-1).concat([file.substr(2)]).join("/"), options);
           } else if(file[1] === "." && file[2] === "/"){
             var path = requiringModule.split("/");
-            return addFile(path.slice(0,path.length-2).concat([file.substr(3)]).join("/"), requiringModule, options);
+            return addFile(path.slice(0,path.length-2).concat([file.substr(3)]).join("/"), options);
           } 
           
         }
@@ -151,10 +157,19 @@ sand.define("sandcli/require", ["sandcli/path", "sandcli/exists"], function(r){
              
              var stats = fs.lstatSync(f);
              if(e !== "spec" && e!== "test"){
+             
+               var nOptions = {};
+               //clone options
+               for(var key in options) if(options.hasOwnProperty(key)){
+                 nOptions.key = options.key;
+               }
+               
+               nOptions.requiringModule = file;
+               
                if (stats.isDirectory()) {
-                 mName = addFile(dir+"/"+e.split(".")[0]+"/*", file, options);
+                 mName = addFile(dir+"/"+e.split(".")[0]+"/*", nOptions);
                } else {
-                 mName = addFile(dir+"/"+e.split(".")[0], file, options);
+                 mName = addFile(dir+"/"+e.split(".")[0], nOptions);
                }
                var mNames = mName.split("/*")[0].split("/");
                mName = mNames.slice(0, mNames.length-1).join("/")+"/*";
@@ -181,10 +196,10 @@ sand.define("sandcli/require", ["sandcli/path", "sandcli/exists"], function(r){
 
           if(fileN && (fileN.match(file) || file.match(fileN))){
             file = fileN;
-            
+            options.requiringModule = file;
             files[file].requires.map(function(f){
               //console.log("[DBG] ",file," require ",f)
-              addFile(f,file, options);
+              addFile(f, options);
             });
             
             return file;
@@ -195,9 +210,12 @@ sand.define("sandcli/require", ["sandcli/path", "sandcli/exists"], function(r){
             console.log("[WARNING] the file "+file+" define the module "+fileN);
           } 
         } else {
+           // 1. maybe it exists in the requiringModule lib files
            
+           
+           //2. does it exist when we load it as node module ?          
            try {
-             // does it exist when we load it as node module ?
+
              if(env === "node") {    
                
                require.resolve(file);
@@ -262,7 +280,7 @@ sand.define("sandcli/require", ["sandcli/path", "sandcli/exists"], function(r){
           changedInAddFile = true;
         } 
         
-        moduleName = addFile(moduleName, null, options);
+        moduleName = addFile(moduleName, options);
 
         changedInAddFile && (sand.define = sand.basicDefine);
         return moduleName;
