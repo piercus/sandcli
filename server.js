@@ -44,7 +44,8 @@ sand.define("sandcli/server", ["sandcli/merge", "sandcli/min", "sandcli/require"
            
       app.get("*", function(req, res) {      
          res.setHeader('Content-Type',"text/javascript");
-         console.log(req.route.params[0].substr(1));  res.send(fs.readFileSync(r.require.findFile(req.route.params[0].substr(1), { env : "browser"})));
+         var f = r.require.findFile(req.route.params[0].substr(1), { env : "browser"});
+         console.log(req.route.params[0].substr(1));  res.send(fs.readFileSync(f));
 
       });
       console.log("=> sand server start at http://localhost:"+port);

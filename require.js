@@ -9,7 +9,7 @@ sand.define("sandcli/require", ["sandcli/path", "sandcli/exists"], function(r){
       realpath = fs.realpathSync,
       wrappers = [],
       paths = r.path.getPaths(),
-      files = {},
+      files = {},bool,
       requireStatus = {
         serverDefine : false
       },
@@ -21,11 +21,11 @@ sand.define("sandcli/require", ["sandcli/path", "sandcli/exists"], function(r){
            return module;
         },
         
-        browser : function(filename) {
-          sand.define(filename, function() {
+        browser : function(module) {
+          sand.define(module, function() {
              return {};
           });
-          return filename;  
+          return module;  
         }
       },
       findFilename = function(n) {
@@ -60,19 +60,25 @@ sand.define("sandcli/require", ["sandcli/path", "sandcli/exists"], function(r){
         if(f) return f;        
         n = (name.slice(name.length-3) !== ".js") ? name+".js" : name;
         f = findFilename(n);
-        if(f) return f;   
+        if(f) return f;  
         
+        //console.log("search "+name+"in a package", name.split("/")[0]);
         f = findFilenameInPackage(name, name.split("/")[0]);
         if(f) return f;
         
-        options.requiringModule && (f = findFilenameInPackage(name, options.requiringModule.split("/")[0]));
-        if(f) return f;
+        if(typeof options.requiringModule === "string"){
+         (f = findFilenameInPackage(name, options.requiringModule.split("/")[0]));
+          if(f) return f;
+        } else {
+          //console.log("no requiring module", options);
+        }
 
       },
       findFilenameInPackage = function(name, pack){
         var p2, f;
-        if(p2 = findPath(pack)){
+        if((pack.length > 0) && (p2 = findPath(pack))){
           // 1. search in module/packages.json to see if there is a '_sand' key
+          //console.log("package found", p2);
           var packFile = p2+"/package.json", modules, _sand, wrapper;
           
           if(exists(packFile)){                                     
@@ -101,7 +107,9 @@ sand.define("sandcli/require", ["sandcli/path", "sandcli/exists"], function(r){
           // 2. search in module/lib for a file
           // find based module 
           p = p2+"/lib/"+name;
+          
           f = findFile(p);
+          //console.log(p, f);
           if(f){
             return f;
           }   
@@ -127,8 +135,10 @@ sand.define("sandcli/require", ["sandcli/path", "sandcli/exists"], function(r){
       },
       addFile = function(file, options){
 
-        var env = (options && options.env) || "node",
+        options || (options = {});
+        var env = options.env || "node",
             requiringModule = options.requiringModule;
+
         if(file[0] === ".") {
           if(file[1] === "/"){
             var path = requiringModule.split("/");
@@ -183,6 +193,7 @@ sand.define("sandcli/require", ["sandcli/path", "sandcli/exists"], function(r){
         // TODO : should be factorise with sandjs
         
         var f = findFile(file, options);
+
         if(f && files[f]){
           return f;
         } else if (f) {
@@ -190,30 +201,31 @@ sand.define("sandcli/require", ["sandcli/path", "sandcli/exists"], function(r){
           try {
             require(f);
           } catch(e){
-            
+            console.log("Error loading ",f, "\n Error", e);
           }
           var fileN = sand.lastDefine;
 
           if(fileN && (fileN.match(file) || file.match(fileN))){
             file = fileN;
-            options.requiringModule = file;
             files[file].requires.map(function(f){
+              var o = { env : env, requiringModule : file};
               //console.log("[DBG] ",file," require ",f)
-              addFile(f, options);
+              addFile(f, o);
             });
             
             return file;
           } else if(fileN === false) {
             // f doesn't define anything 
+            //console.log("f doesn't define anything", envRequires[env], file)
+            files[file] || (files[file] = {});
+            files[file].requires = [];
+            files[file].filename = f;
             return envRequires[env](file);
           } else {
             console.log("[WARNING] the file "+file+" define the module "+fileN);
           } 
         } else {
-           // 1. maybe it exists in the requiringModule lib files
-           
-           
-           //2. does it exist when we load it as node module ?          
+           // does it exist when we load it as node module ?          
            try {
 
              if(env === "node") {    
@@ -246,7 +258,7 @@ sand.define("sandcli/require", ["sandcli/path", "sandcli/exists"], function(r){
              }
              
            } catch(e) {
-             console.log("[ERROR] can't find file or module "+file,"required by",requiringModule,e);
+             console.log("[ERROR] can't find file or module "+file, "required by", requiringModule, e);
            }
          }
       },

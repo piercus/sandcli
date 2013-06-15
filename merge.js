@@ -17,9 +17,10 @@ sand.define("sandcli/merge", ["sandcli/require"], function(r) {
         } else {
           text += fs.readFileSync(r.require.findFile(i, options), "utf8")+"\n"; 
         }
+        //console.log("merged "+i)
       } catch(e){
-        console.log("[WARNING] Cannot merge the module "+i);
-      }          
+        console.log("[WARNING] Cannot merge the module "+i, files[i], e);
+      }      
     }            
                                                                
     // sand lib is the first thing

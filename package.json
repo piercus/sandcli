@@ -11,11 +11,11 @@
     "url": "http://github.com/piercus/sandcli"
   },
   "dependencies": {
-    "sandjs" : "git://github.com/piercus/sandjs.git",
-    "uglify-js" : "*",
-    "browserify" : "1.16.3",
-    "vows" : "*",
-    "express" : "*"
+    "sandjs": "git://github.com/piercus/sandjs.git",
+    "uglify-js": "*",
+    "browserify": "1.16.3",
+    "vows": "*",
+    "express": "*"
   },
   "bin": {
     "sand": "sand"
